@@ -14,17 +14,9 @@ import math
 import random
 import urllib2
 import alg_cluster
-
-# conditional imports
-if DESKTOP:
-    import main # desktop project solution
-    import alg_clusters_matplotlib
-else:
-    # import userXX_XXXXXXXX as alg_project3_solution   # CodeSkulptor project solution
-    import alg_clusters_simplegui
-    import codeskulptor
-
-    codeskulptor.set_timeout(30)
+import main
+import alg_clusters_matplotlib
+import matplotlib.pyplot as plt
 
 ###################################################
 # Code to load data tables
@@ -93,50 +85,72 @@ def run_example():
 
     Set DESKTOP = True/False to use either matplotlib or simplegui
     """
-    data_table = load_data_table(DATA_3108_URL)
+    data_table = load_data_table(DATA_111_URL)
 
     singleton_list = []
     for line in data_table:
         singleton_list.append(alg_cluster.Cluster(set([line[0]]), line[1], line[2], line[3], line[4]))
 
-    # cluster_list = sequential_clustering(singleton_list, 9)
+    # cluster_list = sequential_clustering(singleton_list, 15)
     # print "Displaying", len(cluster_list), "sequential clusters"
 
-    cluster_list = main.hierarchical_clustering(singleton_list, 9)
-    print "Displaying", len(cluster_list), "hierarchical clusters"
+    # cluster_list = main.hierarchical_clustering(singleton_list, 9)
+    # print "Displaying", len(cluster_list), "hierarchical clusters"
 
+    cluster_list = main.kmeans_clustering(singleton_list, 9, 5)
+    print "Displaying", len(cluster_list), "k-means clusters"
+    compute_distortion(cluster_list)
+
+    # draw the clusters using matplotlib
+
+    # alg_clusters_matplotlib.plot_clusters(data_table, cluster_list, False)
+    alg_clusters_matplotlib.plot_clusters(data_table, cluster_list, True)  #add cluster centers
+
+# run_example()
+
+data_table = load_data_table(DATA_896_URL)
+singleton_list = []
+for line in data_table:
+    singleton_list.append(alg_cluster.Cluster(set([line[0]]), line[1], line[2], line[3], line[4]))
+
+def compute_distortion(cluster_list):
+    distortion = 0
     for cluster in cluster_list:
-        print "counties = ", len(cluster.fips_codes()), cluster.horiz_center(),cluster._vert_center, cluster.averaged_risk()
+        distortion += cluster.cluster_error(data_table=data_table)
+    return distortion
 
-    # cluster_list = alg_project3_solution.kmeans_clustering(singleton_list, 9, 5)
-    # print "Displaying", len(cluster_list), "k-means clusters"
+def run_plotter():
+    """
+    plot distortion of k_means and hierarcichal as a function of output cluster
+    number ranging from 6 to 20, inclusive.
+    :return:
+    """
+    x_data = []
+    ky_data = []
+    for n in range(6, 21):
+        x_data.append(n)
+        k_cluster_list = main.kmeans_clustering(singleton_list, n, 5)
+        ky_data.append(compute_distortion(k_cluster_list) / 10e10)
 
-    # draw the clusters using matplotlib or simplegui
-    if DESKTOP:
-        alg_clusters_matplotlib.plot_clusters(data_table, cluster_list, False)
-        # alg_clusters_matplotlib.plot_clusters(data_table, cluster_list, True)  #add cluster centers
-    else:
-        alg_clusters_simplegui.PlotClusters(data_table, cluster_list)  # use toggle in GUI to add cluster centers
+    h_distortion_list = []
+    h_cluster_list = main.hierarchical_clustering(singleton_list,20)
+    h_distortion_list.append(compute_distortion(h_cluster_list) /10e10)
+    for n in range(19, 5, -1):
+        h_cluster_list = main.hierarchical_clustering(h_cluster_list,n)
+        h_distortion_list.append(compute_distortion(h_cluster_list) / 10e10)
+    h_distortion_list.reverse()
 
+    plt.plot(x_data, ky_data, "g-", label="k-means clustering (5 iterations)")
+    plt.plot(x_data, h_distortion_list, "r-", label="hierarchical clustering")
+    plt.legend()
+    plt.title("K-means and Hierarchical Algorithms")
+    plt.suptitle("Comparison of Distortion (896 data points)")
+    plt.xlabel("Number of Output Clusters")
+    plt.ylabel("Distortion x 10^11")
+    plt.savefig("distortion_plot")
+    plt.show()
 
-run_example()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+run_plotter()
 
 
 
