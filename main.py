@@ -14,8 +14,6 @@ where cluster_list is a 2D list of clusters in the plane
 import math
 import alg_cluster
 
-
-
 ######################################################
 # Code for closest pairs of clusters
 
@@ -52,8 +50,6 @@ def slow_closest_pair(cluster_list):
                     idx1 = idx_u
                     idx2 = idx_v
     return (distance, idx1, idx2)
-
-
 
 
 def fast_closest_pair(cluster_list):
@@ -204,3 +200,5 @@ def inter_cluster_distance(cluster1, cluster2):
     """
     return math.sqrt(math.pow((cluster1.horiz_center()-cluster2.horiz_center()),2) + \
            math.pow((cluster1.vert_center()-cluster2.vert_center()),2))
+
+
